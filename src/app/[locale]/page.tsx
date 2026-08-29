@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { PostList } from "@/components/blog/post-list";
 import { ResearchConsole } from "@/components/home/research-console";
 import { SectionHeading } from "@/components/home/section-heading";
 import { getDictionary, resolveLocale } from "@/i18n/get-dictionary";
+import { listPosts } from "@/lib/blog/content";
 
 export default async function HomePage(props: PageProps<"/[locale]">) {
   const locale = await resolveLocale(props.params);
   const dictionary = await getDictionary(locale);
   const home = dictionary.home;
+  const recentPosts = (await listPosts(locale)).slice(0, 3);
 
   return (
     <>
@@ -52,22 +55,26 @@ export default async function HomePage(props: PageProps<"/[locale]">) {
       <section className="ambient-surface border-y">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
           <SectionHeading {...home.recentPosts} />
-          <div className="glass-medium rounded-3xl border p-6 sm:p-8">
-            <div className="flex items-center justify-between gap-4">
-              <span className="rounded-full bg-accent-soft px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-accent-strong">
-                {home.recentPosts.emptyStatus}
-              </span>
-              <span className="font-mono text-xs text-muted">00 POSTS</span>
-            </div>
-            <h3 className="mt-14 text-2xl font-semibold tracking-tight">{home.recentPosts.emptyTitle}</h3>
-            <p className="mt-3 max-w-xl leading-7 text-muted">{home.recentPosts.emptyDescription}</p>
-            <div className="mt-8 border-t pt-5">
-              <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted">{home.recentPosts.categoriesLabel}</p>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted">
-                {home.recentPosts.categories.map((category) => <span key={category}>#{category}</span>)}
+          {recentPosts.length > 0 ? (
+            <PostList locale={locale} posts={recentPosts} compact />
+          ) : (
+            <div className="glass-medium rounded-3xl border p-6 sm:p-8">
+              <div className="flex items-center justify-between gap-4">
+                <span className="rounded-full bg-accent-soft px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.12em] text-accent-strong">
+                  {home.recentPosts.emptyStatus}
+                </span>
+                <span className="font-mono text-xs text-muted">00 POSTS</span>
+              </div>
+              <h3 className="mt-14 text-2xl font-semibold tracking-tight">{home.recentPosts.emptyTitle}</h3>
+              <p className="mt-3 max-w-xl leading-7 text-muted">{home.recentPosts.emptyDescription}</p>
+              <div className="mt-8 border-t pt-5">
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.14em] text-muted">{home.recentPosts.categoriesLabel}</p>
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted">
+                  {home.recentPosts.categories.map((category) => <span key={category}>#{category}</span>)}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 

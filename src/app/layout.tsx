@@ -1,4 +1,5 @@
 import Script from "next/script";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 const themeInitializer = `

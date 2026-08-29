@@ -1,4 +1,14 @@
 # Blog content
 
-Future MDX posts will live here, grouped by locale or linked through shared frontmatter identifiers.
-The MDX pipeline will be added when real articles and their metadata requirements are available.
+Each article lives in one slug-named folder. Chinese is required and translations are optional:
+
+```text
+article-slug/
+  zh.mdx
+  ja.mdx
+  en.mdx
+```
+
+Required frontmatter fields are `title`, `description`, `date`, `category`, `tags`,
+`draft`, `originalLocale`, and `translationStatus`. Translation status is one of
+`original`, `machine`, or `human`.
