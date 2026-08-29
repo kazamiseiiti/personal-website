@@ -33,7 +33,7 @@ function NavigationLinks({ locale, dictionary }: SiteHeaderProps) {
 
 export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur-md">
+    <header className="glass-strong sticky top-0 z-20 border-b">
       <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link href={`/${locale}`} className="mr-auto min-w-0">
           <span className="block truncate text-sm font-semibold tracking-tight">
@@ -56,11 +56,11 @@ export function SiteHeader({ locale, dictionary }: SiteHeaderProps) {
         <details className="relative lg:hidden">
           <summary
             aria-label={dictionary.accessibility.menu}
-            className="grid size-9 cursor-pointer list-none place-items-center rounded-full border bg-surface text-lg marker:content-none"
+            className="glass-control grid size-9 cursor-pointer list-none place-items-center rounded-full border text-lg transition-colors marker:content-none"
           >
             <span aria-hidden="true">≡</span>
           </summary>
-          <div className="absolute right-0 top-12 w-64 rounded-xl border bg-surface p-3 shadow-xl shadow-black/10">
+          <div className="glass-strong absolute right-0 top-12 w-64 rounded-xl border p-3">
             <nav className="flex flex-col" aria-label={dictionary.accessibility.menu}>
               <NavigationLinks locale={locale} dictionary={dictionary} />
             </nav>

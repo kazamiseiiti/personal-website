@@ -28,7 +28,7 @@ export function ThemeToggle({ label }: ThemeToggleProps) {
       onClick={toggleTheme}
       aria-label={label}
       title={label}
-      className="grid size-9 cursor-pointer place-items-center rounded-full border bg-surface text-sm transition-colors hover:border-accent hover:text-accent"
+      className="glass-control grid size-9 cursor-pointer place-items-center rounded-full border text-sm transition-colors hover:text-accent"
     >
       <span aria-hidden="true" className="dark:hidden">◐</span>
       <span aria-hidden="true" className="hidden dark:inline">◑</span>

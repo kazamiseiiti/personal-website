@@ -6,6 +6,24 @@ export type PageKey =
   | "publications"
   | "contact";
 
+type Action = {
+  label: string;
+  href: "/blog" | "/projects" | "/about";
+};
+
+type HomeSection = {
+  eyebrow: string;
+  title: string;
+  description: string;
+};
+
+type AboutSection = {
+  index: string;
+  title: string;
+  paragraphs: string[];
+  topics?: string[];
+};
+
 export type Dictionary = {
   metadata: {
     title: string;
@@ -20,15 +38,38 @@ export type Dictionary = {
     menu: string;
     theme: string;
     language: string;
+    researchVisual: string;
   };
   home: {
     eyebrow: string;
+    name: string;
+    roleTags: string[];
+    introduction: string[];
+    actions: Action[];
+    recentPosts: HomeSection & {
+      categoriesLabel: string;
+      categories: string[];
+      emptyTitle: string;
+      emptyDescription: string;
+      emptyStatus: string;
+    };
+    featuredProjects: HomeSection & {
+      emptyTitle: string;
+      emptyDescription: string;
+      emptyStatus: string;
+    };
+    currentFocus: HomeSection & {
+      topics: Array<{ title: string; description: string }>;
+    };
+    aboutPreview: HomeSection & {
+      action: string;
+    };
+  };
+  about: {
+    eyebrow: string;
     title: string;
     introduction: string;
-    primaryAction: string;
-    secondaryAction: string;
-    areasTitle: string;
-    areas: Array<{ title: string; description: string }>;
+    sections: AboutSection[];
   };
   pages: Record<PageKey, { title: string; description: string; note: string }>;
   footer: {
