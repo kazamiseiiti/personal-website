@@ -60,7 +60,7 @@ const dictionary: Dictionary = {
   },
   about: {
     eyebrow: "About / 九枫 Seiiti",
-    title: "Going deeper between research and real-world engineering.",
+    title: "Everything I chase is something I have already lost,and everything I have lost was lost because I could not let go.",
     introduction: "This is not a résumé. It is a clearer account of where I started, what I am doing now, and what I want to keep exploring.",
     sections: [
       {

@@ -45,7 +45,7 @@ const dictionary: Dictionary = {
     },
     currentFocus: {
       eyebrow: "03 / Exploring", title: "当前关注",
-      description: "从医学影像研究走到制造现场后，我仍在寻找 AI 与真实工程问题相遇的方式。",
+      description: "从医学影像研究走到制造现场后，仍在寻找 AI 与真实工程问题相遇的方式。",
       topics: [
         { title: "Vascular intelligence", description: "医学影像、脑血管结构、点云与图建模。" },
         { title: "Applied AI systems", description: "Python、RAG、AI Agent 与系统集成。" },
@@ -60,8 +60,8 @@ const dictionary: Dictionary = {
   },
   about: {
     eyebrow: "About / 九枫 Seiiti",
-    title: "在研究与现实工程之间，继续把问题做深。",
-    introduction: "这里不是一份简历，而是对我从哪里出发、目前在做什么，以及接下来想继续探索什么的说明。",
+    title: "凡我所追逐之物皆失去之物，凡我所失去之物皆因我妄想执着。",
+    introduction: "这里简单记录一下我的研究经历、现在的工作，以及之后还想继续尝试的方向。",
     sections: [
       {
         index: "01", title: "About Me",

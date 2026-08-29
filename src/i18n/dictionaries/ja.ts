@@ -60,7 +60,7 @@ const dictionary: Dictionary = {
   },
   about: {
     eyebrow: "About / 九枫 Seiiti",
-    title: "研究と現実のエンジニアリングの間で、問いを掘り下げ続ける。",
+    title: "追い求めるものは、いつも失ったものばかり。そして失ったものは、すべて私が手放せずにいたせいなのだ。",
     introduction: "これは履歴書ではありません。どこから来て、今何をしていて、これから何を探究したいのかをまとめたページです。",
     sections: [
       {
