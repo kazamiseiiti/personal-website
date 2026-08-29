@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { DocumentLocale } from "@/components/layout/document-locale";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
-import "../globals.css";
 
 export const dynamicParams = false;
 
@@ -32,14 +32,6 @@ export async function generateMetadata(
   };
 }
 
-const themeScript = `
-  try {
-    const saved = localStorage.getItem("theme");
-    const dark = saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.classList.toggle("dark", dark);
-  } catch {}
-`;
-
 export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
   const { locale } = await props.params;
 
@@ -50,19 +42,11 @@ export default async function LocaleLayout(props: LayoutProps<"/[locale]">) {
   const dictionary = await getDictionary(locale);
 
   return (
-    <html
-      lang={locale}
-      suppressHydrationWarning
-      className="h-full antialiased"
-    >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
-      <body className="flex min-h-full flex-col">
-        <SiteHeader locale={locale} dictionary={dictionary} />
-        <main className="flex-1">{props.children}</main>
-        <SiteFooter dictionary={dictionary} />
-      </body>
-    </html>
+    <div lang={locale} className="contents">
+      <DocumentLocale locale={locale} />
+      <SiteHeader locale={locale} dictionary={dictionary} />
+      <main className="flex-1">{props.children}</main>
+      <SiteFooter dictionary={dictionary} />
+    </div>
   );
 }

@@ -1,10 +1,21 @@
 "use client";
 
+import { useLayoutEffect } from "react";
+
 type ThemeToggleProps = {
   label: string;
 };
 
 export function ThemeToggle({ label }: ThemeToggleProps) {
+  useLayoutEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const isDark =
+      savedTheme === "dark" ||
+      (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    document.documentElement.classList.toggle("dark", isDark);
+  }, []);
+
   function toggleTheme() {
     const root = document.documentElement;
     const isDark = root.classList.toggle("dark");
