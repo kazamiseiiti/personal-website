@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Script from "next/script";
 import "katex/dist/katex.min.css";
 import "./globals.css";
@@ -12,6 +13,10 @@ const themeInitializer = `
     );
   } catch {}
 `;
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

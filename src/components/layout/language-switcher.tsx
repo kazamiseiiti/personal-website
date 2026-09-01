@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { localeLabels, locales, type Locale } from "@/i18n/config";
+import { resolveTranslatedContentPath } from "@/lib/content/translations";
 
 type LanguageSwitcherProps = {
   locale: Locale;
@@ -40,7 +41,9 @@ function LanguageSwitcherLinks({ locale, label }: LanguageSwitcherProps) {
   return (
     <div className="flex items-center gap-1" aria-label={label}>
       {locales.map((item) => {
-        const localizedPathname = `/${item}${pathnameWithoutLocale}`;
+        const localizedPathname =
+          resolveTranslatedContentPath(pathnameWithoutLocale, item) ??
+          `/${item}${pathnameWithoutLocale}`;
         const href = query ? `${localizedPathname}?${query}` : localizedPathname;
 
         return (

@@ -1,0 +1,340 @@
+---
+title: Brain Arterial Vessel Extraction and Structural Completion Modeling of MRA Images Using Deep Learning
+description: A study using PointNet++ and GCN to model point-cloud geometry and connectivity in non-contrast MRA, then reconstruct cerebral vessels.
+locale: en
+slug: cerebral-vessel-structure-completion
+translationKey: cerebral-vessel-completion
+---
+
+### Overview
+
+My master's research focused on **modeling and completing cerebral vascular structures from non-contrast MRA**, with particular attention to the arteries around the Circle of Willis.
+
+Understanding cerebral vessels requires more than identifying which voxels belong to a vessel. Their connectivity, branching patterns, and overall topology are also important, especially when vascular structures are incomplete or ambiguous in the image.
+
+CTA is widely used for vascular imaging and generally provides clear vessel contrast, but it commonly requires the use of a contrast agent. MRA, on the other hand, can visualize blood vessels without contrast administration and is therefore a more non-invasive imaging modality.
+
+However, MRA also presents several challenges. Because vascular contrast depends strongly on blood-flow signals, intensity can be inconsistent, and small vessels may become weak or partially missing.
+
+For this reason, even when vessel segmentation performs well locally, the resulting structure may still contain discontinuities or incorrect connections.
+
+In this study, I represented cerebral vessels as a combination of a **3D point cloud and a graph**, and built a model combining PointNet++ and Graph Convolutional Networks.
+
+PointNet++ was used to learn local vascular geometry, while the GCN modeled relationships between neighboring vessel points.
+
+The central question of the project was therefore not simply:
+
+> Is this voxel part of a blood vessel?
+
+but rather:
+
+> Should these two vessel points be connected?
+
+---
+
+## Background
+
+Maximum Intensity Projection, or MIP, is commonly used to visualize vascular structures from CT and MRA volumes.
+
+It provides an intuitive view of vessels, but because a three-dimensional structure is projected onto a two-dimensional image, vessel overlap and complex branching can make the true connectivity difficult to interpret.
+
+CNN-based approaches such as U-Net and nnU-Net have become standard tools for medical image segmentation and can achieve strong performance in vascular segmentation.
+
+However, CNNs mainly learn information from local image neighborhoods.
+
+For vascular networks, local appearance alone does not fully describe the structure.
+
+Two vessel regions may be spatially close but anatomically unrelated. Conversely, parts of the same vessel may appear disconnected due to weak signal or imaging artifacts.
+
+This motivated me to explicitly model vessel connectivity using point-cloud and graph-based learning.
+
+---
+
+## Dataset
+
+The experiments were conducted using the **TopCoW 2024** dataset.
+
+It contains 125 MRA cases with manually annotated cerebral vessel structures.
+
+The study focused on **13 arterial segments** around the Circle of Willis, including major cerebral arteries such as the ACA, PCA, and ICA.
+
+The dataset was divided into:
+
+- 122 training cases
+- 3 validation cases
+
+The validation cases were kept separate from training.
+
+![Example cerebral vessels from the TopCoW 2024 dataset](/images/research/cerebral-vessel-completion/research-dataset-example.png)
+
+
+---
+
+## Point-Cloud Representation
+
+Instead of processing the vessels only as voxels, I converted the annotated vessel regions into a 3D point cloud.
+
+For every vessel point, I extracted:
+
+- its 3D coordinate `(x, y, z)`
+- the normalized MRA intensity
+- its semantic vessel label
+
+The 13 vessel classes were encoded using a one-hot representation.
+
+As a result, each point had a **17-dimensional feature vector** consisting of:
+
+- 3 spatial coordinates
+- 1 intensity value
+- 13 semantic features
+
+This representation allowed the vascular anatomy to be handled directly as a set of spatial points with both image and semantic information.
+
+---
+
+## Graph Construction
+
+A point cloud alone does not explicitly describe the relationship between points.
+
+I therefore constructed a graph using K-nearest neighbors.
+
+The value was set to:
+
+**k = 4**
+
+For each vessel point, the four nearest points in 3D space were used as candidate neighbors.
+
+Each vessel point became a graph node, while candidate point pairs became graph edges.
+
+The learning task was then formulated as binary edge classification.
+
+If two points belonged to the same semantic vessel segment, the corresponding edge was treated as a positive sample:
+
+`edge_label = 1`
+
+If they belonged to different vessel segments, the edge was treated as a negative sample:
+
+`edge_label = 0`
+
+Positive and negative samples were kept approximately balanced during training.
+
+---
+
+## Network Architecture
+
+The proposed model consists of three main stages:
+
+**PointNet++ → GCN → Edge Classification**
+
+![Research framework combining PointNet++, GCN, and edge classification](/images/research/cerebral-vessel-completion/research-framework.png)
+
+### PointNet++
+
+PointNet++ was used to learn local geometric features from the vascular point cloud.
+
+Cerebral vessels are thin, curved, and highly branched structures, which makes point-based representation suitable for capturing their local geometry.
+
+The network uses hierarchical Set Abstraction layers to sample representative points and aggregate information from their neighborhoods.
+
+In this study:
+
+- the first SA layer sampled 512 points,
+- the second SA layer sampled 128 points.
+
+Feature Propagation layers were then used to interpolate the learned features back to the original point resolution.
+
+This gave each vessel point a representation containing information about its surrounding geometry.
+
+---
+
+## Graph Convolutional Network
+
+Although PointNet++ captures local geometry well, vascular structure also depends on relationships between neighboring points.
+
+To model this, I added two GCN layers after PointNet++.
+
+The GCN operates on the KNN graph.
+
+Through message passing, every vessel point receives information from nearby points, allowing the network to incorporate local connectivity and structural context.
+
+The resulting features therefore represent not only local shape but also relationships associated with continuity and branching.
+
+---
+
+## Edge Classification
+
+The final stage predicts whether a candidate connection should exist.
+
+For each candidate edge, the feature vectors of its two endpoint nodes are concatenated and passed through a multilayer perceptron.
+
+The model outputs a scalar probability representing the likelihood that the edge should be present.
+
+In other words, vessel completion is formulated as an **edge classification problem**.
+
+---
+
+## Loss Function
+
+Binary Cross-Entropy was used as the main supervision for edge classification.
+
+$$
+L_{\mathrm{BCE}}
+$$
+I also introduced an auxiliary instance consistency loss to encourage more consistent predictions within the same vessel segment.
+
+The final objective was:
+$$
+L = L_{\mathrm{BCE}} + \lambda L_{\mathrm{instance}}
+$$
+The purpose of this additional term was to reduce inconsistent local predictions and improve structural coherence.
+
+---
+
+## Early Experiments with nnU-Net
+
+During the early stage of the project, I also investigated using nnU-Net as a preprocessing step.
+
+The idea was to segment vessels with nnU-Net, skeletonize the resulting masks, and convert those skeletons into point clouds for the downstream PointNet++ and GCN model.
+
+The segmentation itself was reasonably successful.
+
+However, skeletonization reduced the number of points substantially.
+
+This became problematic around thin vessels and bifurcations, where the resulting point clouds were too sparse to provide enough information for stable PointNet++ and GCN training.
+
+For this reason, I did not use the nnU-Net skeletons as the final model input.
+
+Instead, I generated denser point clouds directly from the annotated vessel voxels.
+
+This was one of the main design decisions made during the project.
+
+---
+
+## Experimental Setup
+
+The main experimental environment was:
+
+- Ubuntu 22.04.5 LTS
+- NVIDIA RTX A6000
+- Python
+- PyTorch
+- PyTorch Geometric
+- CUDA / cuDNN
+
+The model was trained using the Adam optimizer.
+
+The initial learning rate was:
+
+`0.001`
+
+and was reduced progressively during training.
+
+---
+
+## Results
+
+The edge classification performance was evaluated using:
+
+- Accuracy
+- Precision
+- Recall
+- F1 Score
+
+Results on the three validation cases were:
+
+|Case|Accuracy|Precision|Recall|F1|
+|---|---|---|---|---|
+|case_00122|0.9321|0.8936|0.9808|0.9352|
+|case_00124|0.9438|0.9113|0.9832|0.9459|
+|case_00123|0.9456|0.9183|0.9778|0.9471|
+|**Average**|**0.9405**|**0.9077**|**0.9806**|**0.9427**|
+
+The average Recall was approximately **0.981**, while the average F1 Score was approximately **0.943**.
+
+Training and validation losses generally decreased during optimization and became relatively stable in the later stages.
+
+The model also maintained similar edge-classification performance across the three held-out validation cases.
+
+Because only three cases were used for validation, these results should be viewed as an initial demonstration of feasibility rather than conclusive evidence of broad generalization.
+
+![Edge-classification results across the three validation cases](/images/research/cerebral-vessel-completion/research-result-visualization.png)
+
+
+---
+
+## Reconstruction into MRA Space
+
+The neural network predicts connections between vessel points rather than directly producing a volumetric vessel mask.
+
+A post-processing pipeline was therefore required to reconstruct the predicted graph into the original MRA volume.
+
+The following constraints were used:
+
+- edge probability threshold: **0.6**
+- maximum edge length: **8 voxels**
+- maximum node degree: **3**
+- morphological dilation radius: **1 voxel**
+
+Low-confidence edges were removed first.
+
+A distance constraint was then applied to suppress implausible long-range connections.
+
+The maximum node degree was limited to reduce overly dense connections around individual points.
+
+Finally, the selected edges were mapped back to the original MRA voxel coordinates.
+
+Morphological dilation was applied to the reconstructed centerlines to obtain vessel structures with visible thickness.
+
+![Reconstructed predicted connections in point-cloud space](/images/research/cerebral-vessel-completion/research-pointcloud-reconstruction.png)
+
+![Reconstructed vessels in MRA voxel space](/images/research/cerebral-vessel-completion/research-mra-reconstruction.png)
+
+![MRA vessel reconstruction view one](/images/research/cerebral-vessel-completion/research-mra-view-1.png)
+
+![MRA vessel reconstruction view two](/images/research/cerebral-vessel-completion/research-mra-view-2.png)
+
+---
+
+## What This Project Explored
+
+The project resulted in a complete pipeline:
+
+**MRA → point cloud → graph → edge prediction → volumetric reconstruction**
+
+PointNet++ was responsible for learning local vascular geometry, while the GCN introduced information about relationships between neighboring points.
+
+Rather than treating vessel analysis purely as a segmentation task, I explored the idea of explicitly predicting vessel connectivity.
+
+This allowed geometric information and graph structure to be considered within the same framework.
+
+---
+
+## Limitations
+
+There are several important limitations.
+
+First, only three cases were used for validation. This is not sufficient for a comprehensive evaluation of model generalization.
+
+Second, the model uses the 13-class semantic vessel labels as part of its input features, meaning that it relies on strong prior annotation.
+
+Third, the current quantitative evaluation mainly measures edge-classification performance.
+
+Metrics such as Accuracy, Recall, and F1 Score indicate whether candidate connections are classified correctly, but they do not completely characterize anatomical or topological correctness of the reconstructed vascular network.
+
+Finally, vessel segmentation and structural completion are still separate stages rather than a fully end-to-end pipeline.
+
+---
+
+## Future Work
+
+A natural next step would be validation on a substantially larger number of cases.
+
+Another direction is to extend the framework to multimodal vascular imaging, including CTA.
+
+A more complete system could also integrate:
+
+**vessel segmentation → graph construction → structural completion**
+
+into a single end-to-end network.
+
+For evaluation, future work could include topology-oriented metrics such as graph connectivity, preservation of vessel branches, and the number of structural errors, rather than relying mainly on conventional binary classification metrics.
